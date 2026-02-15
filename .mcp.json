@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "forge": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/forge/workspace/.forge/mcp-server.cjs"
+      ],
+      "env": {
+        "FORGE_ARTIFACTS_DIR": "/home/forge/workspace/.forge/artifacts/k17bayrn2k6qf963b8ta2edxks816419",
+        "FORGE_ARTIFACTS_ROOT": "/home/forge/workspace/.forge/artifacts"
+      }
+    }
+  }
+}

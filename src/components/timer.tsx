@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Play, Pause, RotateCcw } from "lucide-react"
+import { Play, Pause, RotateCcw, Save } from "lucide-react"
+import { useTimeEntries } from "@/hooks/useTimeEntries"
 
-// Component props interface for future extensibility
 interface TimerProps {}
 
 export function Timer({}: TimerProps) {
@@ -13,18 +13,23 @@ export function Timer({}: TimerProps) {
   const [isRunning, setIsRunning] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number | null>(null)
+  const sessionStartRef = useRef<number | null>(null)
   const accumulatedSecondsRef = useRef(0)
+  
+  const { addEntry } = useTimeEntries()
 
-  // Improved timer accuracy using Date.now() differential timing to prevent drift
   useEffect(() => {
     if (isRunning) {
       startTimeRef.current = Date.now()
+      if (sessionStartRef.current === null) {
+        sessionStartRef.current = Date.now()
+      }
       intervalRef.current = setInterval(() => {
         if (startTimeRef.current !== null) {
           const elapsedSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000)
           setSeconds(accumulatedSecondsRef.current + elapsedSeconds)
         }
-      }, 100) // Update more frequently for smoother display
+      }, 100)
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
@@ -44,33 +49,44 @@ export function Timer({}: TimerProps) {
     }
   }, [isRunning])
 
-  // Memoized formatTime function to prevent recreation on every render
   const formatTime = useCallback((totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600)
     const minutes = Math.floor((totalSeconds % 3600) / 60)
     const secs = totalSeconds % 60
-
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`
   }, [])
 
-  // Memoized handlers to prevent recreation on every render
   const handleStartStop = useCallback(() => {
     setIsRunning((prev) => !prev)
   }, [])
 
-  // Reset button stops the timer AND clears it to 00:00:00
+  const handleSaveAndReset = useCallback(() => {
+    if (seconds > 0 && sessionStartRef.current) {
+      addEntry({
+        startTime: sessionStartRef.current,
+        endTime: Date.now(),
+        duration: seconds,
+      })
+    }
+    setIsRunning(false)
+    setSeconds(0)
+    accumulatedSecondsRef.current = 0
+    startTimeRef.current = null
+    sessionStartRef.current = null
+  }, [seconds, addEntry])
+
   const handleReset = useCallback(() => {
     setIsRunning(false)
     setSeconds(0)
     accumulatedSecondsRef.current = 0
     startTimeRef.current = null
+    sessionStartRef.current = null
   }, [])
 
   return (
     <Card className="w-full max-w-md">
       <CardContent className="pt-6">
         <div className="flex flex-col items-center gap-8">
-          {/* Timer display with accessibility attributes */}
           <div
             className="text-6xl font-mono font-bold tracking-wider tabular-nums"
             role="timer"
@@ -101,13 +117,22 @@ export function Timer({}: TimerProps) {
             <Button
               size="lg"
               variant="outline"
-              onClick={handleReset}
+              onClick={handleSaveAndReset}
               className="min-w-[120px]"
               disabled={seconds === 0}
-              aria-label="Reset timer to zero"
+              aria-label="Save entry and reset timer"
             >
-              <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
-              Reset
+              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+              Save
+            </Button>
+            <Button
+              size="lg"
+              variant="ghost"
+              onClick={handleReset}
+              disabled={seconds === 0}
+              aria-label="Reset timer without saving"
+            >
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </div>
