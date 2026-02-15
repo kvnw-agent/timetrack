@@ -6,10 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Play, Pause, RotateCcw } from "lucide-react"
 import { useTimeEntries } from "@/hooks/useTimeEntries"
 
-// Component props interface for future extensibility
-interface TimerProps {}
-
-export function Timer({}: TimerProps) {
+export function Timer() {
   const [seconds, setSeconds] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)

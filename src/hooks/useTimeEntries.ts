@@ -10,22 +10,21 @@ export interface TimeEntry {
 const STORAGE_KEY = "timetrack-entries"
 
 export function useTimeEntries() {
-  const [entries, setEntries] = useState<TimeEntry[]>([])
-
-  // Load entries from localStorage on mount
-  useEffect(() => {
-    if (typeof window === "undefined") return
+  // Load entries from localStorage on mount using lazy initialization
+  const [entries, setEntries] = useState<TimeEntry[]>(() => {
+    if (typeof window === "undefined") return []
 
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        setEntries(Array.isArray(parsed) ? parsed : [])
+        return Array.isArray(parsed) ? parsed : []
       }
     } catch (error) {
       console.error("Failed to load time entries from localStorage:", error)
     }
-  }, [])
+    return []
+  })
 
   // Persist entries to localStorage whenever they change
   useEffect(() => {
