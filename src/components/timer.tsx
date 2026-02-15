@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 
 export default function Timer() {
@@ -8,7 +8,7 @@ export default function Timer() {
   const [isRunning, setIsRunning] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  useEffect(() => {
+useEffect(() => {
     if (isRunning) {
       intervalRef.current = setInterval(() => {
         setTime((prevTime) => prevTime + 1000)
@@ -25,6 +25,20 @@ export default function Timer() {
       }
     }
   }, [isRunning])
+
+  // Handler functions with useCallback to prevent recreation on every render
+  const handleStart = useCallback(() => {
+    setIsRunning(true)
+  }, [])
+
+  const handleStop = useCallback(() => {
+    setIsRunning(false)
+  }, [])
+
+  const handleReset = useCallback(() => {
+    setIsRunning(false)
+    setTime(0)
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -47,7 +61,7 @@ export default function Timer() {
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [isRunning])
+  }, [isRunning, handleStart, handleStop, handleReset])
 
   const formatTime = (milliseconds: number): string => {
     const totalSeconds = Math.floor(milliseconds / 1000)
@@ -56,19 +70,6 @@ export default function Timer() {
     const seconds = totalSeconds % 60
 
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
-  }
-
-  const handleStart = () => {
-    setIsRunning(true)
-  }
-
-  const handleStop = () => {
-    setIsRunning(false)
-  }
-
-  const handleReset = () => {
-    setIsRunning(false)
-    setTime(0)
   }
 
   return (
